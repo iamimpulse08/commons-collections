@@ -32,10 +32,12 @@ import java.util.*;
 
 public class UnmodifiableOrderedMapNoDecorator<K,V> extends AbstractIterableMap<K, V> implements Unmodifiable, Serializable, OrderedMap<K, V> {
 
-    transient Map<K ,V> map;
     /** Serialization version */
     private static final long serialVersionUID = 8136428161720526266L;
 
+    private final List<K> orderedKeys;
+    private final Map<K, V> data;
+    private final Map<K, Integer> keyIndexMap;
     /**
      * Factory method to create an unmodifiable sorted map.
      *
@@ -57,43 +59,51 @@ public class UnmodifiableOrderedMapNoDecorator<K,V> extends AbstractIterableMap<
 
     @SuppressWarnings("unchecked")
     private UnmodifiableOrderedMapNoDecorator(final OrderedMap<? extends K, ? extends V> map) {
-        this.map = (OrderedMap<K, V>) Objects.requireNonNull(map, "map");
+        Objects.requireNonNull(map, "map");
+
+        this.orderedKeys = new ArrayList<>(map.keySet());
+        this.data = new HashMap<>(map);
+
+        this.keyIndexMap = new HashMap<>();
+        for (int i = 0; i < orderedKeys.size(); i++) {
+            keyIndexMap.put(orderedKeys.get(i), i);
+        }
     }
 
 
 
     public OrderedMapIterator<K, V> mapIterator() {
-        final OrderedMapIterator<K, V> iterator = ((OrderedMap<K, V>) map).mapIterator(); // include this behaviour
+        final OrderedMapIterator<K, V> iterator = ((OrderedMap<K, V>) data).mapIterator(); // include this behaviour
         return UnmodifiableOrderedMapIterator.unmodifiableOrderedMapIterator(iterator);
     }
 
     protected Map<K, V> decorated() {
-        return map;
+        return data;
     }
 
     @Override
     public int size() {
-        return map.size();
+        return data.size();
     }
 
     @Override
     public boolean isEmpty() {
-        return map.isEmpty();
+        return data.isEmpty();
     }
 
     @Override
     public boolean containsKey(Object key) {
-        return map.containsKey(key);
+        return data.containsKey(key);
     }
 
     @Override
     public boolean containsValue(Object value) {
-        return map.containsValue(value);
+        return data.containsValue(value);
     }
 
     @Override
     public V get(final Object key) {
-        return map.get(key);
+        return data.get(key);
     }
 
     @Override
@@ -118,17 +128,17 @@ public class UnmodifiableOrderedMapNoDecorator<K,V> extends AbstractIterableMap<
 
     @Override
     public Set<K> keySet() {
-        return UnmodifiableSet.unmodifiableSet(map.keySet());
+        return UnmodifiableSet.unmodifiableSet(data.keySet());
     }
 
     @Override
     public Collection<V> values() {
-        return UnmodifiableCollection.unmodifiableCollection(map.values());
+        return UnmodifiableCollection.unmodifiableCollection(data.values());
     }
 
     @Override
     public Set<Map.Entry<K, V>> entrySet() {
-        return UnmodifiableEntrySet.unmodifiableEntrySet(map.entrySet());
+        return UnmodifiableEntrySet.unmodifiableEntrySet(data.entrySet());
     }
 
     public V getDecorated(final K key) {
@@ -137,37 +147,51 @@ public class UnmodifiableOrderedMapNoDecorator<K,V> extends AbstractIterableMap<
 
     @Override
     public K firstKey() {
-        return ((OrderedMap<K, V>) map).firstKey();
+        if (orderedKeys.isEmpty()) {
+            throw new NoSuchElementException("Map is empty");
+        }
+        return orderedKeys.get(0);
     }
 
     @Override
     public K lastKey() {
-        return ((OrderedMap<K, V>) map).lastKey();
+        if (orderedKeys.isEmpty()) {
+            throw new NoSuchElementException("Map is empty");
+        }
+        return orderedKeys.get(orderedKeys.size() - 1);
     }
 
     @Override
     public K nextKey(final K key) {
-        return ((OrderedMap<K, V>) map).nextKey(key);
+        Integer index = keyIndexMap.get(key);
+        if (index == null || index >= orderedKeys.size() - 1) {
+            return null;
+        }
+        return orderedKeys.get(index + 1);
     }
 
     @Override
     public K previousKey(final K key) {
-        return ((OrderedMap<K, V>) map).previousKey(key);
+        int index = orderedKeys.indexOf(key);
+        if (index <= 0) {
+            return null;
+        }
+        return orderedKeys.get(index - 1);
     }
 
     @Override
     public int hashCode() {
-        return map.hashCode();
+        return data.hashCode();
     }
 
     @Override
     public String toString() {
-        return map.toString();
+        return data.toString();
     }
 
     @Override
     public boolean equals(Object obj) {
-        return map.equals(obj);
+        return data.equals(obj);
     }
 
 
