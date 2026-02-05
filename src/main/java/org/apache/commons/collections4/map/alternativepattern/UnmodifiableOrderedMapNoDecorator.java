@@ -57,12 +57,17 @@ public class UnmodifiableOrderedMapNoDecorator<K,V> extends AbstractIterableMap<
         return new UnmodifiableOrderedMapNoDecorator<>(map);
     }
 
+    /**
+     * This constructor operation ensures that O(1) behaviour is still enforced by creating two copies of the data, which adds O(N+2) operations at run-time when constructing the object,
+     * which in theory should use more energy via the DRAM; however, this is immeasurable within JoularJX; however, we can still see the impact on the CPUs energy readings.
+     * @param map The ordered map, which is to be copied rather than decorated, must not be null.
+     */
     @SuppressWarnings("unchecked")
-    private UnmodifiableOrderedMapNoDecorator(final OrderedMap<? extends K, ? extends V> map) {
+    private UnmodifiableOrderedMapNoDecorator(final OrderedMap<? extends K, ? extends V> map) { // TODO : Test LinkedHashMap implementation.
         Objects.requireNonNull(map, "map");
 
         this.orderedKeys = new ArrayList<>(map.keySet());
-        this.data = new HashMap<>(map);
+        this.data = new HashMap<>(map); // TODO : Test LinkedHashMap implementation
 
         this.keyIndexMap = new HashMap<>();
         for (int i = 0; i < orderedKeys.size(); i++) {
@@ -128,17 +133,17 @@ public class UnmodifiableOrderedMapNoDecorator<K,V> extends AbstractIterableMap<
 
     @Override
     public Set<K> keySet() {
-        return UnmodifiableSet.unmodifiableSet(data.keySet());
+        return data.keySet();
     }
 
     @Override
     public Collection<V> values() {
-        return UnmodifiableCollection.unmodifiableCollection(data.values());
+        return data.values();
     }
 
     @Override
     public Set<Map.Entry<K, V>> entrySet() {
-        return UnmodifiableEntrySet.unmodifiableEntrySet(data.entrySet());
+        return data.entrySet();
     }
 
     public V getDecorated(final K key) {
@@ -172,8 +177,8 @@ public class UnmodifiableOrderedMapNoDecorator<K,V> extends AbstractIterableMap<
 
     @Override
     public K previousKey(final K key) {
-        int index = orderedKeys.indexOf(key);
-        if (index <= 0) {
+        Integer index = keyIndexMap.get(key);
+        if (index == null || index <= 0) {
             return null;
         }
         return orderedKeys.get(index - 1);
