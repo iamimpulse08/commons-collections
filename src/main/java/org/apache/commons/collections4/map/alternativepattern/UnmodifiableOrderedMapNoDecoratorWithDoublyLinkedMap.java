@@ -26,14 +26,14 @@ import org.apache.commons.collections4.map.AbstractIterableMap;
 import java.io.Serializable;
 import java.util.*;
 
-public class UnmodifiableOrderedMapNoDecorator<K,V> extends AbstractIterableMap<K, V> implements Unmodifiable, Serializable, OrderedMap<K, V> {
+public class UnmodifiableOrderedMapNoDecoratorWithDoublyLinkedMap<K,V> extends AbstractIterableMap<K, V> implements Unmodifiable, Serializable, OrderedMap<K, V> {
 
     /** Serialization version */
     private static final long serialVersionUID = 8136428161720526266L;
 
-    private final List<K> orderedKeys;
     private final Map<K, V> data;
-    private final Map<K, Integer> keyIndexMap;
+    DoublyLinkedMap<K, V> linkedMap;
+
     /**
      * Factory method to create an unmodifiable sorted map.
      *
@@ -44,13 +44,13 @@ public class UnmodifiableOrderedMapNoDecorator<K,V> extends AbstractIterableMap<
      * @throws NullPointerException if map is null
      * @since 4.0
      */
-    public static <K, V> OrderedMap<K, V> unmodifiableOrderedMapNoDecorator(final OrderedMap<? extends K, ? extends V> map) {
+    public static <K, V> OrderedMap<K, V> unmodifiableOrderedMapNoDecorator(final OrderedMap<K, V> map) {
         if (map instanceof Unmodifiable) {
             @SuppressWarnings("unchecked") // safe to upcast
             final OrderedMap<K, V> tmpMap = (OrderedMap<K, V>) map;
             return tmpMap;
         }
-        return new UnmodifiableOrderedMapNoDecorator<>(map);
+        return new UnmodifiableOrderedMapNoDecoratorWithDoublyLinkedMap<>(map);
     }
 
     /**
@@ -59,16 +59,11 @@ public class UnmodifiableOrderedMapNoDecorator<K,V> extends AbstractIterableMap<
      * @param map The ordered map, which is to be copied rather than decorated, must not be null.
      */
     @SuppressWarnings("unchecked")
-    private UnmodifiableOrderedMapNoDecorator(final OrderedMap<? extends K, ? extends V> map) { // TODO : Test LinkedHashMap implementation.
+    private UnmodifiableOrderedMapNoDecoratorWithDoublyLinkedMap(final OrderedMap<K, V> map) { // TODO : Test LinkedHashMap implementation.
         Objects.requireNonNull(map, "map");
 
-        this.orderedKeys = new ArrayList<>(map.keySet());
+        linkedMap = new DoublyLinkedMap<>(map);
         this.data = new HashMap<>(map); // TODO : Test LinkedHashMap implementation
-
-        this.keyIndexMap = new HashMap<>();
-        for (int i = 0; i < orderedKeys.size(); i++) {
-            keyIndexMap.put(orderedKeys.get(i), i);
-        }
     }
 
 
@@ -138,7 +133,7 @@ public class UnmodifiableOrderedMapNoDecorator<K,V> extends AbstractIterableMap<
     }
 
     @Override
-    public Set<Map.Entry<K, V>> entrySet() {
+    public Set<Entry<K, V>> entrySet() {
         return data.entrySet();
     }
 
@@ -148,36 +143,22 @@ public class UnmodifiableOrderedMapNoDecorator<K,V> extends AbstractIterableMap<
 
     @Override
     public K firstKey() {
-        if (orderedKeys.isEmpty()) {
-            throw new NoSuchElementException("Map is empty");
-        }
-        return orderedKeys.get(0);
+        return linkedMap.getHead();
     }
 
     @Override
     public K lastKey() {
-        if (orderedKeys.isEmpty()) {
-            throw new NoSuchElementException("Map is empty");
-        }
-        return orderedKeys.get(orderedKeys.size() - 1);
+        return linkedMap.getTail();
     }
 
     @Override
     public K nextKey(final K key) {
-        Integer index = keyIndexMap.get(key);
-        if (index == null || index >= orderedKeys.size() - 1) {
-            return null;
-        }
-        return orderedKeys.get(index + 1);
+        return linkedMap.getNext(key);
     }
 
     @Override
     public K previousKey(final K key) {
-        Integer index = keyIndexMap.get(key);
-        if (index == null || index <= 0) {
-            return null;
-        }
-        return orderedKeys.get(index - 1);
+        return linkedMap.getPrevious(key);
     }
 
     @Override

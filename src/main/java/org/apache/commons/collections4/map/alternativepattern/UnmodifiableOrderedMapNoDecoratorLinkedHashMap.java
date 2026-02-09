@@ -26,7 +26,7 @@ import org.apache.commons.collections4.map.AbstractIterableMap;
 import java.io.Serializable;
 import java.util.*;
 
-public class UnmodifiableOrderedMapNoDecorator<K,V> extends AbstractIterableMap<K, V> implements Unmodifiable, Serializable, OrderedMap<K, V> {
+public class UnmodifiableOrderedMapNoDecoratorLinkedHashMap<K,V> extends AbstractIterableMap<K, V> implements Unmodifiable, Serializable, OrderedMap<K, V> {
 
     /** Serialization version */
     private static final long serialVersionUID = 8136428161720526266L;
@@ -45,12 +45,14 @@ public class UnmodifiableOrderedMapNoDecorator<K,V> extends AbstractIterableMap<
      * @since 4.0
      */
     public static <K, V> OrderedMap<K, V> unmodifiableOrderedMapNoDecorator(final OrderedMap<? extends K, ? extends V> map) {
-        if (map instanceof Unmodifiable) {
+
+        throw new UnsupportedOperationException("This method is not supported.");
+/*        if (map instanceof Unmodifiable) {
             @SuppressWarnings("unchecked") // safe to upcast
             final OrderedMap<K, V> tmpMap = (OrderedMap<K, V>) map;
             return tmpMap;
         }
-        return new UnmodifiableOrderedMapNoDecorator<>(map);
+        return new UnmodifiableOrderedMapNoDecoratorLinkedHashMap<>(map);*/
     }
 
     /**
@@ -59,13 +61,14 @@ public class UnmodifiableOrderedMapNoDecorator<K,V> extends AbstractIterableMap<
      * @param map The ordered map, which is to be copied rather than decorated, must not be null.
      */
     @SuppressWarnings("unchecked")
-    private UnmodifiableOrderedMapNoDecorator(final OrderedMap<? extends K, ? extends V> map) { // TODO : Test LinkedHashMap implementation.
+    private UnmodifiableOrderedMapNoDecoratorLinkedHashMap(final OrderedMap<? extends K, ? extends V> map) { // TODO : Test LinkedHashMap implementation.
         Objects.requireNonNull(map, "map");
 
         this.orderedKeys = new ArrayList<>(map.keySet());
         this.data = new HashMap<>(map); // TODO : Test LinkedHashMap implementation
 
-        this.keyIndexMap = new HashMap<>();
+        this.keyIndexMap = new LinkedHashMap<>();
+
         for (int i = 0; i < orderedKeys.size(); i++) {
             keyIndexMap.put(orderedKeys.get(i), i);
         }
@@ -138,7 +141,7 @@ public class UnmodifiableOrderedMapNoDecorator<K,V> extends AbstractIterableMap<
     }
 
     @Override
-    public Set<Map.Entry<K, V>> entrySet() {
+    public Set<Entry<K, V>> entrySet() {
         return data.entrySet();
     }
 
