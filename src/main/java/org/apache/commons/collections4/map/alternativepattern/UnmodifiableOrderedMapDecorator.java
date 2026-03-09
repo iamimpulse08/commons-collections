@@ -26,7 +26,7 @@ import org.apache.commons.collections4.map.AbstractIterableMap;
 import java.io.Serializable;
 import java.util.*;
 
-public class UnmodifiableOrderedMapNoDecoratorWithDoublyLinkedMap<K,V> extends AbstractIterableMap<K, V> implements Unmodifiable, Serializable, OrderedMap<K, V> {
+public class UnmodifiableOrderedMapDecorator<K,V> extends AbstractIterableMap<K, V> implements Unmodifiable, Serializable, OrderedMap<K, V> {
 
     /** Serialization version */
     private static final long serialVersionUID = 8136428161720526266L;
@@ -50,7 +50,7 @@ public class UnmodifiableOrderedMapNoDecoratorWithDoublyLinkedMap<K,V> extends A
             final OrderedMap<K, V> tmpMap = (OrderedMap<K, V>) map;
             return tmpMap;
         }
-        return new UnmodifiableOrderedMapNoDecoratorWithDoublyLinkedMap<>(map);
+        return new UnmodifiableOrderedMapDecorator<>(map);
     }
 
     /**
@@ -59,7 +59,7 @@ public class UnmodifiableOrderedMapNoDecoratorWithDoublyLinkedMap<K,V> extends A
      * @param map The ordered map, which is to be copied rather than decorated, must not be null.
      */
     @SuppressWarnings("unchecked")
-    public UnmodifiableOrderedMapNoDecoratorWithDoublyLinkedMap(final OrderedMap<K, V> map) { // TODO : Test LinkedHashMap implementation.
+    public UnmodifiableOrderedMapDecorator(final OrderedMap<K, V> map) { // TODO : Test LinkedHashMap implementation.
         Objects.requireNonNull(map, "map");
 
         linkedMap = new DoublyLinkedMap<>(map);
@@ -69,7 +69,7 @@ public class UnmodifiableOrderedMapNoDecoratorWithDoublyLinkedMap<K,V> extends A
 
 
     public OrderedMapIterator<K, V> mapIterator() {
-        final OrderedMapIterator<K, V> iterator = ((OrderedMap<K, V>) data).mapIterator(); // include this behaviour
+        final OrderedMapIterator<K, V> iterator = ((OrderedMap<K, V>) decorated()).mapIterator(); // include this behaviour
         return UnmodifiableOrderedMapIterator.unmodifiableOrderedMapIterator(iterator);
     }
 
@@ -79,27 +79,27 @@ public class UnmodifiableOrderedMapNoDecoratorWithDoublyLinkedMap<K,V> extends A
 
     @Override
     public int size() {
-        return data.size();
+        return decorated().size();
     }
 
     @Override
     public boolean isEmpty() {
-        return data.isEmpty();
+        return decorated().isEmpty();
     }
 
     @Override
     public boolean containsKey(Object key) {
-        return data.containsKey(key);
+        return decorated().containsKey(key);
     }
 
     @Override
     public boolean containsValue(Object value) {
-        return data.containsValue(value);
+        return decorated().containsValue(value);
     }
 
     @Override
     public V get(final Object key) {
-        return data.get(key);
+        return decorated().get(key);
     }
 
     @Override
@@ -124,23 +124,23 @@ public class UnmodifiableOrderedMapNoDecoratorWithDoublyLinkedMap<K,V> extends A
 
     @Override
     public Set<K> keySet() {
-        return data.keySet();
+        return decorated().keySet();
     }
 
     @Override
     public Collection<V> values() {
-        return data.values();
+        return decorated().values();
     }
 
     @Override
     public Set<Entry<K, V>> entrySet() {
-        return data.entrySet();
+        return decorated().entrySet();
     }
 
-    public V getDecorated(final K key) {
-        return decorated().get(key);
-    }
-
+    /**
+     * The below isn't ideal to be the linked map, but I don't think there's any other way to do it, other than to extend HashMap, but that would skew all results, so we ignore.
+     * @return
+     */
     @Override
     public K firstKey() {
         return linkedMap.getHead();
@@ -163,17 +163,17 @@ public class UnmodifiableOrderedMapNoDecoratorWithDoublyLinkedMap<K,V> extends A
 
     @Override
     public int hashCode() {
-        return data.hashCode();
+        return decorated().hashCode();
     }
 
     @Override
     public String toString() {
-        return data.toString();
+        return decorated().toString();
     }
 
     @Override
     public boolean equals(Object obj) {
-        return data.equals(obj);
+        return decorated().equals(obj);
     }
 
 

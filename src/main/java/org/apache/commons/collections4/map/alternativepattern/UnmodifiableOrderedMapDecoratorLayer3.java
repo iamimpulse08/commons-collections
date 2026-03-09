@@ -21,18 +21,16 @@ import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.OrderedMapIterator;
 import org.apache.commons.collections4.Unmodifiable;
 import org.apache.commons.collections4.iterators.UnmodifiableOrderedMapIterator;
-import org.apache.commons.collections4.map.AbstractIterableMap;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 
-public class UnmodifiableOrderedMapNoDecoratorWithDoublyLinkedMap<K,V> extends AbstractIterableMap<K, V> implements Unmodifiable, Serializable, OrderedMap<K, V> {
+public class UnmodifiableOrderedMapDecoratorLayer3<K,V> extends UnmodifiableOrderedMapDecoratorLayer2<K, V> implements Unmodifiable, Serializable, OrderedMap<K, V> {
 
     /** Serialization version */
     private static final long serialVersionUID = 8136428161720526266L;
-
-    private final Map<K, V> data;
-    DoublyLinkedMap<K, V> linkedMap;
 
     /**
      * Factory method to create an unmodifiable sorted map.
@@ -50,7 +48,7 @@ public class UnmodifiableOrderedMapNoDecoratorWithDoublyLinkedMap<K,V> extends A
             final OrderedMap<K, V> tmpMap = (OrderedMap<K, V>) map;
             return tmpMap;
         }
-        return new UnmodifiableOrderedMapNoDecoratorWithDoublyLinkedMap<>(map);
+        return new UnmodifiableOrderedMapDecoratorLayer3<>(map);
     }
 
     /**
@@ -59,47 +57,41 @@ public class UnmodifiableOrderedMapNoDecoratorWithDoublyLinkedMap<K,V> extends A
      * @param map The ordered map, which is to be copied rather than decorated, must not be null.
      */
     @SuppressWarnings("unchecked")
-    public UnmodifiableOrderedMapNoDecoratorWithDoublyLinkedMap(final OrderedMap<K, V> map) { // TODO : Test LinkedHashMap implementation.
-        Objects.requireNonNull(map, "map");
-
-        linkedMap = new DoublyLinkedMap<>(map);
-        this.data = new HashMap<>(map); // TODO : Test LinkedHashMap implementation
+    public UnmodifiableOrderedMapDecoratorLayer3(final OrderedMap<K, V> map) { // TODO : Test LinkedHashMap implementation.
+        super(map);
     }
 
 
 
     public OrderedMapIterator<K, V> mapIterator() {
-        final OrderedMapIterator<K, V> iterator = ((OrderedMap<K, V>) data).mapIterator(); // include this behaviour
+        final OrderedMapIterator<K, V> iterator = ((OrderedMap<K, V>) decorated()).mapIterator(); // include this behaviour
         return UnmodifiableOrderedMapIterator.unmodifiableOrderedMapIterator(iterator);
     }
 
-    protected Map<K, V> decorated() {
-        return data;
-    }
 
     @Override
     public int size() {
-        return data.size();
+        return super.size();
     }
 
     @Override
     public boolean isEmpty() {
-        return data.isEmpty();
+        return super.isEmpty();
     }
 
     @Override
     public boolean containsKey(Object key) {
-        return data.containsKey(key);
+        return super.containsKey(key);
     }
 
     @Override
     public boolean containsValue(Object value) {
-        return data.containsValue(value);
+        return super.containsValue(value);
     }
 
     @Override
     public V get(final Object key) {
-        return data.get(key);
+        return super.get(key);
     }
 
     @Override
@@ -124,17 +116,17 @@ public class UnmodifiableOrderedMapNoDecoratorWithDoublyLinkedMap<K,V> extends A
 
     @Override
     public Set<K> keySet() {
-        return data.keySet();
+        return super.keySet();
     }
 
     @Override
     public Collection<V> values() {
-        return data.values();
+        return super.values();
     }
 
     @Override
     public Set<Entry<K, V>> entrySet() {
-        return data.entrySet();
+        return super.entrySet();
     }
 
     public V getDecorated(final K key) {
@@ -163,17 +155,17 @@ public class UnmodifiableOrderedMapNoDecoratorWithDoublyLinkedMap<K,V> extends A
 
     @Override
     public int hashCode() {
-        return data.hashCode();
+        return super.hashCode();
     }
 
     @Override
     public String toString() {
-        return data.toString();
+        return super.toString();
     }
 
     @Override
     public boolean equals(Object obj) {
-        return data.equals(obj);
+        return super.equals(obj);
     }
 
 
