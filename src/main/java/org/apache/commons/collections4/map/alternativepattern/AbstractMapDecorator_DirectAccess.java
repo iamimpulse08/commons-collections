@@ -127,7 +127,7 @@ public abstract class AbstractMapDecorator_DirectAccess<K, V> extends AbstractIt
     }
 
     @Override
-    public void putAll(final Map<? extends K, ? extends V> mapToCopy) {
+    public void putAll(final Map<? extends K, ? extends V> mapToCopy)   {
         map.putAll(mapToCopy);
     }
 
